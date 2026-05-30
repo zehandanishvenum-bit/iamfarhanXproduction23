@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevPlay — Code. Play. Learn.</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: #2a2a3d;
+    --accent: #7c3aed;
+    --accent2: #06d6a0;
+    --accent3: #f72585;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --mono: 'Space Mono', monospace;
+    --display: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100vh; overflow-x: hidden; }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2rem; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.9); backdrop-filter: blur(20px);
+  }
+  .logo { font-family: var(--display); font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
+  .logo span { color: var(--accent2); }
+  .nav-tabs { display: flex; gap: 0.25rem; }
+  .nav-tab {
+    padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer;
+    font-size: 0.85rem; font-weight: 500; color: var(--text2);
+    transition: all 0.2s; border: 1px solid transparent;
+    background: none;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { color: var(--accent2); border-color: var(--accent2); background: rgba(6,214,160,0.08); }
+
+  /* AD BANNER */
+  .ad-banner {
+    background: linear-gradient(90deg, var(--surface) 0%, var(--surface2) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 2rem; text-align: center; font-size: 0.78rem;
+    color: var(--text2); letter-spacing: 0.5px;
+  }
+  .ad-banner strong { color: var(--accent); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* HERO */
+  .hero { text-align: center; padding: 3rem 2rem 2rem; }
+  .hero h1 { font-family: var(--display); font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; line-height: 1.1; letter-spacing: -2px; }
+  .hero h1 em { font-style: normal; color: var(--accent2); }
+  .hero p { color: var(--text2); margin-top: 1rem; font-size: 1.05rem; max-width: 500px; margin-inline: auto; }
+  .hero-btns { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
+  .btn { padding: 0.7rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: var(--body); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* APPS GRID */
+  .apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-top: 2rem; }
+  .app-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem 1rem; text-align: center; cursor: pointer;
+    transition: all 0.25s; position: relative; overflow: hidden;
+  }
+  .app-card::before { content: ''; position: absolute; inset: 0; background: var(--accent); opacity: 0; transition: 0.25s; }
+  .app-card:hover { transform: translateY(-4px); border-color: var(--accent2); }
+  .app-card:hover::before { opacity: 0.05; }
+  .app-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .app-name { font-weight: 600; font-size: 0.9rem; }
+  .app-desc { font-size: 0.75rem; color: var(--text2); margin-top: 0.25rem; }
+
+  /* APP MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    width: 90%; max-width: 500px; padding: 2rem; position: relative;
+    transform: scale(0.9); transition: 0.3s;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; background: var(--surface2); border: none; color: var(--text2); cursor: pointer; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 1rem; }
+  .modal-title { font-family: var(--display); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+  /* CODE EDITOR */
+  .editor-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; height: 70vh; }
+  @media (max-width: 768px) { .editor-layout { grid-template-columns: 1fr; height: auto; } }
+  .editor-panel { display: flex; flex-direction: column; }
+  .editor-tabs { display: flex; gap: 0.25rem; margin-bottom: 0.5rem; }
+  .editor-tab { padding: 0.3rem 0.8rem; border-radius: 6px 6px 0 0; font-size: 0.8rem; cursor: pointer; background: var(--surface); border: 1px solid var(--border); color: var(--text2); border-bottom: none; }
+  .editor-tab.active { background: var(--surface2); color: var(--accent2); border-color: var(--accent2); }
+  textarea.code-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 0 8px 8px 8px;
+    color: var(--text); font-family: var(--mono); font-size: 0.85rem; padding: 1rem;
+    resize: none; outline: none; line-height: 1.6;
+    min-height: 300px;
+  }
+  textarea.code-input:focus { border-color: var(--accent); }
+  .preview-panel { display: flex; flex-direction: column; }
+  .preview-label { font-size: 0.8rem; color: var(--text2); margin-bottom: 0.5rem; font-family: var(--mono); }
+  iframe#preview { flex: 1; background: #fff; border: 1px solid var(--border); border-radius: 8px; min-height: 300px; }
+  .editor-actions { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+  .python-output { flex: 1; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-family: var(--mono); font-size: 0.82rem; color: var(--accent2); overflow-y: auto; min-height: 200px; white-space: pre-wrap; }
+
+  /* PROMPTS */
+  .prompts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .prompts-header h2 { font-family: var(--display); font-size: 1.5rem; font-weight: 700; }
+  .date-badge { background: var(--surface2); border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; color: var(--accent2); font-family: var(--mono); }
+  .prompt-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; margin-bottom: 1rem; position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .prompt-card:hover { border-color: var(--accent); }
+  .prompt-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; margin-bottom: 0.8rem; }
+  .badge-gemini { background: rgba(6,214,160,0.15); color: var(--accent2); border: 1px solid rgba(6,214,160,0.3); }
+  .badge-chatgpt { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .badge-claude { background: rgba(247,37,133,0.15); color: #f472b6; border: 1px solid rgba(247,37,133,0.3); }
+  .prompt-text { font-size: 0.95rem; line-height: 1.7; color: var(--text); }
+  .copy-btn { margin-top: 1rem; padding: 0.4rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text2); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+  .copy-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+  .copy-btn.copied { color: var(--accent2); border-color: var(--accent2); background: rgba(6,214,160,0.1); }
+
+  /* MINI APP STYLES */
+  .app-container { padding: 1rem 0; }
+  .calc-display { background: #000; border-radius: 8px; padding: 1.2rem; text-align: right; font-family: var(--mono); font-size: 2rem; color: var(--accent2); margin-bottom: 1rem; word-break: break-all; }
+  .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+  .calc-btn { padding: 1rem; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; font-family: var(--mono); font-weight: 600; transition: all 0.15s; }
+  .calc-btn:active { transform: scale(0.95); }
+  .calc-num { background: var(--surface2); color: var(--text); }
+  .calc-op { background: rgba(124,58,237,0.2); color: #a78bfa; }
+  .calc-eq { background: var(--accent); color: #fff; }
+  .calc-clear { background: rgba(247,37,133,0.2); color: #f472b6; }
+
+  /* TODO */
+  .todo-input-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+  .todo-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 1rem; color: var(--text); font-family: var(--body); font-size: 0.9rem; outline: none; }
+  .todo-input:focus { border-color: var(--accent2); }
+  .todo-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; max-height: 300px; overflow-y: auto; }
+  .todo-item { display: flex; align-items: center; gap: 0.75rem; background: var(--surface2); border-radius: 8px; padding: 0.6rem 1rem; }
+  .todo-item.done span { text-decoration: line-through; color: var(--text2); }
+  .todo-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); cursor: pointer; background: none; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .todo-check.checked { background: var(--accent2); border-color: var(--accent2); color: #000; font-size: 0.7rem; }
+  .todo-del { margin-left: auto; background: none; border: none; color: var(--text2); cursor: pointer; font-size: 0.9rem; padding: 0.2rem 0.4rem; border-radius: 4px; }
+  .todo-del:hover { color: var(--accent3); }
+
+  /* TIMER */
+  .timer-display { text-align: center; font-family: var(--mono); font-size: 4rem; color: var(--accent2); letter-spacing: 4px; margin: 1rem 0; }
+  .timer-btns { display: flex; gap: 0.5rem; justify-content: center; }
+
+  /* QUIZ */
+  .quiz-q { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.5; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-opt { padding: 0.8rem 1.2rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: left; color: var(--text); font-size: 0.9rem; transition: all 0.2s; }
+  .quiz-opt:hover { border-color: var(--accent); }
+  .quiz-opt.correct { border-color: var(--accent2); background: rgba(6,214,160,0.1); color: var(--accent2); }
+  .quiz-opt.wrong { border-color: var(--accent3); background: rgba(247,37,133,0.1); color: var(--accent3); }
+  .quiz-score { text-align: center; font-family: var(--mono); font-size: 1.5rem; margin-top: 1rem; color: var(--accent2); }
+  .quiz-next { margin-top: 1rem; width: 100%; }
+
+  /* COLOR PICKER */
+  .color-big { width: 100%; height: 120px; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); cursor: pointer; }
+  .color-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .color-code-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 1rem; text-align: center; }
+  .color-code-label { font-size: 0.7rem; color: var(--text2); }
+  .color-code-val { font-family: var(--mono); font-size: 0.9rem; color: var(--text); cursor: pointer; }
+  .color-palettes { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; }
+  .palette-swatch { width: 36px; height: 36px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: 0.15s; }
+  .palette-swatch:hover { transform: scale(1.2); border-color: #fff; }
+
+  /* PASSWORD */
+  .pass-display { background: #000; border-radius: 8px; padding: 1rem 1.2rem; font-family: var(--mono); font-size: 1rem; color: var(--accent2); word-break: break-all; min-height: 60px; display: flex; align-items: center; margin-bottom: 1rem; }
+  .pass-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+  .pass-opt { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; }
+  .pass-opt input[type=checkbox] { accent-color: var(--accent2); width: 16px; height: 16px; }
+  .pass-len { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .pass-len input[type=range] { flex: 1; accent-color: var(--accent); }
+  .pass-len span { font-family: var(--mono); color: var(--accent2); min-width: 30px; }
+
+  /* BMI */
+  .bmi-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem; }
+  .bmi-field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .bmi-field label { font-size: 0.8rem; color: var(--text2); }
+  .bmi-field input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 1rem; color: var(--text); font-size: 0.95rem; outline: none; font-family: var(--mono); }
+  .bmi-field input:focus { border-color: var(--accent2); }
+  .bmi-result { text-align: center; padding: 1.5rem; background: var(--surface2); border-radius: 12px; }
+  .bmi-number { font-family: var(--mono); font-size: 3rem; font-weight: 700; }
+  .bmi-category { font-size: 1rem; color: var(--text2); margin-top: 0.3rem; }
+
+  /* COIN FLIP */
+  .coin-container { text-align: center; }
+  .coin { width: 120px; height: 120px; margin: 1rem auto; position: relative; cursor: pointer; }
+  .coin-inner { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #ffd700, #ffa500); border: 4px solid #cc8800; box-shadow: 0 4px 20px rgba(255,215,0,0.3); transition: transform 0.1s; }
+  .coin-inner.flipping { animation: coinFlip 0.8s ease; }
+  @keyframes coinFlip {
+    0% { transform: rotateY(0); }
+    50% { transform: rotateY(900deg) scale(0.8); }
+    100% { transform: rotateY(1800deg); }
+  }
+  .coin-result { font-family: var(--display); font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0; min-height: 2rem; }
+  .coin-stats { display: flex; gap: 1rem; justify-content: center; margin: 1rem 0; }
+  .coin-stat { background: var(--surface2); border-radius: 8px; padding: 0.5rem 1rem; text-align: center; }
+  .coin-stat-val { font-family: var(--mono); font-size: 1.2rem; color: var(--accent2); }
+  .coin-stat-label { font-size: 0.75rem; color: var(--text2); }
+  .flip-counter { font-family: var(--mono); color: var(--text2); font-size: 0.85rem; margin-bottom: 0.5rem; }
+  .flip-counter span { color: var(--accent3); font-weight: bold; }
+
+  /* AD GATE */
+  .ad-gate { display: none; background: var(--surface); border: 2px solid var(--accent); border-radius: 16px; padding: 2rem; text-align: center; margin-top: 1rem; }
+  .ad-gate.show { display: block; animation: fadeIn 0.3s ease; }
+  .ad-gate h3 { font-family: var(--display); font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--accent2); }
+  .ad-gate p { color: var(--text2); font-size: 0.9rem; margin-bottom: 1rem; }
+  .fake-ad { background: var(--surface2); border: 1px dashed var(--border); border-radius: 8px; padding: 1.5rem; margin: 1rem 0; color: var(--text2); font-size: 0.85rem; }
+  .ad-progress { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 1rem 0; }
+  .ad-progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s linear; border-radius: 3px; }
+
+  /* SECTION TITLE */
+  .section-title { font-family: var(--display); font-size: 1.8rem; font-weight: 800; margin-bottom: 0.3rem; }
+  .section-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; color: var(--text2); font-size: 0.8rem; margin-top: 3rem; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* SAVED PROJECTS */
+  .saved-list { display: grid; gap: 0.8rem; margin-top: 1rem; }
+  .saved-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color 0.2s; }
+  .saved-item:hover { border-color: var(--accent2); }
+  .saved-name { font-weight: 600; font-size: 0.9rem; }
+  .saved-date { font-size: 0.75rem; color: var(--text2); font-family: var(--mono); }
+  .saved-actions { display: flex; gap: 0.5rem; }
+  .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; background: rgba(124,58,237,0.15); color: #a78bfa; margin-left: 0.5rem; }
+</style>
+</head>
+<body>
+
+<!-- AD BANNER TOP -->
+<div class="ad-banner">
+  📢 <strong>Advertisement:</strong> &nbsp;[Your Google AdSense Ad Here] &nbsp;|&nbsp; Premium Plan — Ad-Free + Unlimited Saves &nbsp;→ &nbsp;<strong>Coming Soon</strong>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Dev<span>Play</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('home')">🏠 Home</button>
+    <button class="nav-tab" onclick="showSection('editor')">💻 Editor</button>
+    <button class="nav-tab" onclick="showSection('apps')">🎮 Apps</button>
+    <button class="nav-tab" onclick="showSection('prompts')">✨ Prompts</button>
+    <button class="nav-tab" onclick="showSection('saved')">💾 Saved</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="section-home" class="section active">
+  <div class="hero">
+    <h1>Code. Play.<br><em>Explore.</em></h1>
+    <p>Free online code editor, mini apps, and daily AI prompts — sab kuch ek jagah.</p>
+    <div class="hero-btns">
+      <button class="btn btn-primary" onclick="showSection('editor')">💻 Code Editor Kholo</button>
+      <button class="btn btn-secondary" onclick="showSection('apps')">🎮 Apps Dekho</button>
+    </div>
+  </div>
+
+  <div style="max-width:1000px;margin:2rem auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">💻</div>
+      <div style="font-weight:700;margin-bottom:0.3rem;">Code Editor</div>
+      <div style="color:var(--text2);font-size:0.85rem;">HTML, CSS, JS aur Python — browser mein run karo</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">🎮</div>
+      <div style="font-weight:700;margin-bottom:0.3rem;">8 Mini Apps</div>
+      <div style="color:var(--text2);font-size:0.85rem;">Calculator se lekar Coin Flip tak — sab free</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">✨</div>
+      <div style="font-weight:700;margin-bottom:0.3rem;">Daily AI Prompts</div>
+      <div style="color:var(--text2);font-size:0.85rem;">ChatGPT, Gemini, Claude ke liye fresh prompts rozana</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">💾</div>
+      <div style="font-weight:700;margin-bottom:0.3rem;">Save Projects</div>
+      <div style="color:var(--text2);font-size:0.85rem;">Apna code save karo, baad mein continue karo</div>
+    </div>
+  </div>
+
+  <!-- MID AD -->
+  <div style="max-width:1000px;margin:1rem auto;background:var(--surface);border:1px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;color:var(--text2);font-size:0.85rem;">
+    📢 [Google AdSense Banner Ad — 728x90]
+  </div>
+</div>
+
+<!-- CODE EDITOR -->
+<div id="section-editor" class="section">
+  <div class="section-title">💻 Code Editor</div>
+  <div class="section-sub">HTML/CSS/JS preview + Python output — sab browser mein</div>
+
+  <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+    <div style="display:flex;gap:0.25rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.3rem;">
+      <button class="calc-btn calc-num" style="padding:0.4rem 1rem;font-size:0.8rem;border-radius:6px;" onclick="setEditorMode('html')" id="mode-html">HTML/JS/CSS</button>
+      <button class="calc-btn calc-num" style="padding:0.4rem 1rem;font-size:0.8rem;border-radius:6px;" onclick="setEditorMode('python')" id="mode-python">Python</button>
+    </div>
+    <input id="project-name" placeholder="Project naam likho..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;color:var(--text);font-size:0.85rem;outline:none;flex:1;min-width:150px;">
+    <button class="btn btn-secondary" style="padding:0.4rem 1rem;font-size:0.82rem;" onclick="saveProject()">💾 Save</button>
+  </div>
+
+  <!-- HTML EDITOR -->
+  <div id="html-editor">
+    <div class="editor-layout">
+      <div class="editor-panel">
+        <div class="editor-tabs">
+          <div class="editor-tab active" onclick="switchTab('html')">HTML</div>
+          <div class="editor-tab" onclick="switchTab('css')">CSS</div>
+          <div class="editor-tab" onclick="switchTab('js')">JS</div>
+        </div>
+        <textarea class="code-input" id="code-html" placeholder="HTML likhna shuru karo..."><!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial; background: #1a1a2e; color: #eee; text-align: center; padding: 50px; }
+    h1 { color: #06d6a0; font-size: 3rem; }
+    button { background: #7c3aed; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 1rem; }
+    button:hover { background: #6d28d9; }
+  </style>
+</head>
+<body>
+  <h1>🚀 Namaste!</h1>
+  <p>DevPlay Code Editor mein swagat hai</p>
+  <button onclick="this.textContent='Clicked! 🎉'">Click Me</button>
+</body>
+</html></textarea>
+        <textarea class="code-input" id="code-css" style="display:none" placeholder="CSS likhna shuru karo...">/* CSS yahaan likhein */</textarea>
+        <textarea class="code-input" id="code-js" style="display:none" placeholder="JavaScript likhna shuru karo...">// JavaScript yahaan likhein</textarea>
+      </div>
+      <div class="preview-panel">
+        <div class="preview-label">▶ LIVE PREVIEW</div>
+        <iframe id="preview" sandbox="allow-scripts"></iframe>
+      </div>
+    </div>
+    <div class="editor-actions">
+      <button class="btn btn-primary" onclick="runHTML()">▶ Run</button>
+      <button class="btn btn-secondary" onclick="clearEditor()">🗑 Clear</button>
+      <button class="btn btn-secondary" onclick="copyCode()">📋 Copy</button>
+    </div>
+  </div>
+
+  <!-- PYTHON EDITOR -->
+  <div id="python-editor" style="display:none">
+    <div class="editor-layout">
+      <div class="editor-panel">
+        <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem;font-family:var(--mono);">🐍 PYTHON CODE</div>
+        <textarea class="code-input" id="code-python" placeholder="Python code likhna shuru karo...">
+# Python Code Editor
+# Note: Yeh Skulpt se run hota hai (browser-based Python)
+
+name = "DevPlay"
+print(f"Namaste, {name}! 🚀")
+
+# Loop example
+for i in range(1, 6):
+    print(f"Line {i}: Hello World!")
+
+# List
+fruits = ["apple", "mango", "banana"]
+for fruit in fruits:
+    print(f"🍎 {fruit}")
+        </textarea>
+      </div>
+      <div class="preview-panel">
+        <div class="preview-label">📤 OUTPUT</div>
+        <div class="python-output" id="python-output">▶ Run dabao output dekhne ke liye...</div>
+      </div>
+    </div>
+    <div class="editor-actions">
+      <button class="btn btn-primary" onclick="runPython()">▶ Run Python</button>
+      <button class="btn btn-secondary" onclick="clearPythonEditor()">🗑 Clear</button>
+    </div>
+    <div style="margin-top:0.5rem;font-size:0.78rem;color:var(--text2);">ℹ️ Skulpt (browser Python) use ho raha hai — basic operations support karta hai</div>
+  </div>
+</div>
+
+<!-- APPS -->
+<div id="section-apps" class="section">
+  <div class="section-title">🎮 Mini Apps</div>
+  <div class="section-sub">8 free tools — seedha browser mein chalao</div>
+  <div class="apps-grid">
+    <div class="app-card" onclick="openApp('calculator')"><div class="app-icon">🧮</div><div class="app-name">Calculator</div><div class="app-desc">Basic + Scientific</div></div>
+    <div class="app-card" onclick="openApp('todo')"><div class="app-icon">✅</div><div class="app-name">Todo List</div><div class="app-desc">Tasks manage karo</div></div>
+    <div class="app-card" onclick="openApp('timer')"><div class="app-icon">⏱️</div><div class="app-name">Stopwatch</div><div class="app-desc">Time track karo</div></div>
+    <div class="app-card" onclick="openApp('quiz')"><div class="app-icon">🧠</div><div class="app-name">Quiz App</div><div class="app-desc">GK + Tech Quiz</div></div>
+    <div class="app-card" onclick="openApp('colorpicker')"><div class="app-icon">🎨</div><div class="app-name">Color Picker</div><div class="app-desc">HEX, RGB codes</div></div>
+    <div class="app-card" onclick="openApp('password')"><div class="app-icon">🔐</div><div class="app-name">Password Gen</div><div class="app-desc">Strong password</div></div>
+    <div class="app-card" onclick="openApp('bmi')"><div class="app-icon">⚖️</div><div class="app-name">BMI Calculator</div><div class="app-desc">Health check karo</div></div>
+    <div class="app-card" onclick="openApp('coinflip')"><div class="app-icon">🪙</div><div class="app-name">Coin Flip</div><div class="app-desc">Heads or Tails? (10 free)</div></div>
+  </div>
+
+  <!-- MID AD -->
+  <div style="margin-top:2rem;background:var(--surface);border:1px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;color:var(--text2);font-size:0.85rem;">
+    📢 [Google AdSense Rectangle Ad — 336x280]
+  </div>
+</div>
+
+<!-- PROMPTS -->
+<div id="section-prompts" class="section">
+  <div class="prompts-header">
+    <div>
+      <div class="section-title">✨ Daily AI Prompts</div>
+      <div class="section-sub">Aaj ke best prompts — ChatGPT, Gemini, Claude ke liye</div>
+    </div>
+    <div class="date-badge" id="today-date"></div>
+  </div>
+
+  <div id="prompts-container"></div>
+
+  <div style="margin-top:2rem;background:var(--surface);border:1px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;color:var(--text2);font-size:0.85rem;">
+    📢 [Google AdSense Ad — 300x250]
+  </div>
+</div>
+
+<!-- SAVED -->
+<div id="section-saved" class="section">
+  <div class="section-title">💾 Saved Projects</div>
+  <div class="section-sub">Tumhare saved code projects</div>
+  <div id="saved-list-container"></div>
+</div>
+
+<!-- APP MODAL -->
+<div class="modal-overlay" id="app-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<footer>
+  © 2025 DevPlay — Free Code Editor & Mini Apps &nbsp;|&nbsp; Made with ❤️
+</footer>
+
+<script>
+// ===== NAVIGATION =====
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab')[['home','editor','apps','prompts','saved'].indexOf(name)].classList.add('active');
+  if(name === 'prompts') renderPrompts();
+  if(name === 'saved') renderSaved();
+}
+
+// ===== EDITOR =====
+let currentTab = 'html';
+let editorMode = 'html';
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['html','css','js'].forEach(t => {
+    document.getElementById('code-'+t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.editor-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['html','css','js'][i] === tab);
+  });
+}
+
+function setEditorMode(mode) {
+  editorMode = mode;
+  document.getElementById('html-editor').style.display = mode === 'html' ? 'block' : 'none';
+  document.getElementById('python-editor').style.display = mode === 'python' ? 'block' : 'none';
+  document.getElementById('mode-html').style.background = mode === 'html' ? 'var(--accent)' : '';
+  document.getElementById('mode-html').style.color = mode === 'html' ? '#fff' : '';
+  document.getElementById('mode-python').style.background = mode === 'python' ? 'var(--accent)' : '';
+  document.getElementById('mode-python').style.color = mode === 'python' ? '#fff' : '';
+}
+
+function runHTML() {
+  const html = document.getElementById('code-html').value;
+  const css = document.getElementById('code-css').value;
+  const js = document.getElementById('code-js').value;
+  const combined = html.replace('</head>', `<style>${css}</style></head>`).replace('</body>', `<script>${js}<\/script></body>`);
+  const preview = document.getElementById('preview');
+  preview.srcdoc = combined;
+}
+
+function clearEditor() {
+  document.getElementById('code-html').value = '';
+  document.getElementById('code-css').value = '';
+  document.getElementById('code-js').value = '';
+  document.getElementById('preview').srcdoc = '';
+}
+
+function copyCode() {
+  const code = document.getElementById('code-' + currentTab).value;
+  navigator.clipboard.writeText(code).then(() => alert('Code copied! ✅'));
+}
+
+// Auto-run on load
+window.addEventListener('load', () => { setEditorMode('html'); setTimeout(runHTML, 500); });
+
+// ===== PYTHON (Skulpt) =====
+function runPython() {
+  const code = document.getElementById('code-python').value;
+  const output = document.getElementById('python-output');
+  output.textContent = '';
+
+  function outf(text) { output.textContent += text; }
+  function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+      throw "File not found: '" + x + "'";
+    return Sk.builtinFiles["files"][x];
+  }
+
+  if(typeof Sk === 'undefined') {
+    // Load Skulpt dynamically
+    const s1 = document.createElement('script');
+    s1.src = 'https://skulpt.org/js/skulpt.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://skulpt.org/js/skulpt-stdlib.js';
+      s2.onload = () => executePython(code, outf, builtinRead);
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+    output.textContent = '⏳ Python engine load ho raha hai...';
+  } else {
+    executePython(code, outf, builtinRead);
+  }
+}
+
+function executePython(code, outf, builtinRead) {
+  const output = document.getElementById('python-output');
+  Sk.configure({ output: outf, read: builtinRead });
+  Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("<stdin>", false, code, true))
+    .catch(err => { output.textContent += '\n❌ Error: ' + err.toString(); });
+}
+
+function clearPythonEditor() {
+  document.getElementById('code-python').value = '';
+  document.getElementById('python-output').textContent = '▶ Run dabao output dekhne ke liye...';
+}
+
+// ===== SAVE/LOAD =====
+function saveProject() {
+  const name = document.getElementById('project-name').value.trim() || 'Untitled Project';
+  const projects = JSON.parse(localStorage.getItem('devplay_projects') || '[]');
+  projects.push({
+    id: Date.now(), name,
+    html: document.getElementById('code-html').value,
+    css: document.getElementById('code-css').value,
+    js: document.getElementById('code-js').value,
+    date: new Date().toLocaleDateString('hi-IN')
+  });
+  localStorage.setItem('devplay_projects', JSON.stringify(projects));
+  alert('✅ Project save ho gaya: ' + name);
+}
+
+function renderSaved() {
+  const container = document.getElementById('saved-list-container');
+  const projects = JSON.parse(localStorage.getItem('devplay_projects') || '[]');
+  if(!projects.length) {
+    container.innerHTML = '<div style="color:var(--text2);text-align:center;padding:3rem;font-size:0.9rem;">Koi saved project nahi hai.<br>Editor mein code likho aur save karo! 💾</div>';
+    return;
+  }
+  container.innerHTML = '<div class="saved-list">' + projects.reverse().map(p => `
+    <div class="saved-item" onclick="loadProject(${p.id})">
+      <div><div class="saved-name">${p.name}<span class="tag">HTML/JS</span></div><div class="saved-date">${p.date}</div></div>
+      <div class="saved-actions">
+        <button class="btn btn-secondary" style="padding:0.3rem 0.7rem;font-size:0.78rem;" onclick="event.stopPropagation();deleteProject(${p.id})">🗑</button>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+function loadProject(id) {
+  const projects = JSON.parse(localStorage.getItem('devplay_projects') || '[]');
+  const p = projects.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('code-html').value = p.html;
+  document.getElementById('code-css').value = p.css;
+  document.getElementById('code-js').value = p.js;
+  document.getElementById('project-name').value = p.name;
+  showSection('editor');
+  setTimeout(runHTML, 200);
+}
+
+function deleteProject(id) {
+  if(!confirm('Delete karna hai?')) return;
+  const projects = JSON.parse(localStorage.getItem('devplay_projects') || '[]');
+  localStorage.setItem('devplay_projects', JSON.stringify(projects.filter(p => p.id !== id)));
+  renderSaved();
+}
+
+// ===== PROMPTS =====
+const PROMPTS = [
+  { badge: 'badge-gemini', label: '🟢 Gemini', text: 'Mujhe ek 7-din ka social media content calendar banao mere [business type] ke liye. Har din ek engaging post idea do jisme hook, body aur CTA shamil ho. Format: table mein.' },
+  { badge: 'badge-chatgpt', label: '🟣 ChatGPT', text: 'Act as a senior product manager. Mera product [product name] hai. Iske liye ek complete PRD (Product Requirements Document) banao jisme user stories, acceptance criteria, aur success metrics ho.' },
+  { badge: 'badge-claude', label: '🔴 Claude', text: 'Mera resume [paste karo] hai. Isko ATS-friendly banana hai [job title] ke liye. Keywords optimize karo, bullets ko quantifiable banao, aur ek professional summary bhi likho.' },
+  { badge: 'badge-gemini', label: '🟢 Gemini', text: 'Ek Python script banao jo automatically mere Gmail se invoices dhundhega, unhe PDF mein save karega, aur ek Excel sheet mein track karega. Step-by-step code do.' },
+  { badge: 'badge-chatgpt', label: '🟣 ChatGPT', text: 'Mujhe ek YouTube video script chahiye topic: "[your topic]". 8-10 minute ka script, catchy hook pehle 15 seconds mein, 3 main points, aur strong CTA. Engaging aur conversational tone rakho.' },
+  { badge: 'badge-claude', label: '🔴 Claude', text: 'Ek complete digital marketing strategy banao mere [niche] business ke liye ₹10,000/month budget mein. Channels: Instagram, Google Ads, Email. ROI projection bhi do.' },
+];
+
+function renderPrompts() {
+  const d = new Date();
+  document.getElementById('today-date').textContent = d.toLocaleDateString('hi-IN', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('prompts-container').innerHTML = PROMPTS.map((p,i) => `
+    <div class="prompt-card">
+      <span class="prompt-badge ${p.badge}">${p.label}</span>
+      <div class="prompt-text">${p.text}</div>
+      <button class="copy-btn" id="copy-btn-${i}" onclick="copyPrompt(${i})">📋 Copy Prompt</button>
+    </div>
+  `).join('');
+}
+
+function copyPrompt(i) {
+  navigator.clipboard.writeText(PROMPTS[i].text);
+  const btn = document.getElementById('copy-btn-'+i);
+  btn.textContent = '✅ Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 Copy Prompt'; btn.classList.remove('copied'); }, 2000);
+}
+
+// ===== MINI APPS =====
+function openApp(name) {
+  const modal = document.getElementById('app-modal');
+  const titles = { calculator:'🧮 Calculator', todo:'✅ Todo List', timer:'⏱️ Stopwatch', quiz:'🧠 Quiz App', colorpicker:'🎨 Color Picker', password:'🔐 Password Generator', bmi:'⚖️ BMI Calculator', coinflip:'🪙 Coin Flip' };
+  document.getElementById('modal-title').textContent = titles[name];
+  document.getElementById('modal-content').innerHTML = getAppHTML(name);
+  modal.classList.add('open');
+  if(name === 'colorpicker') initColorPicker();
+  if(name === 'timer') initTimer();
+  if(name === 'quiz') initQuiz();
+  if(name === 'password') generatePassword();
+  if(name === 'coinflip') initCoinFlip();
+}
+
+function closeModal() {
+  document.getElementById('app-modal').classList.remove('open');
+  if(timerInterval) clearInterval(timerInterval);
+}
+
+// ===== CALCULATOR =====
+function getAppHTML(name) {
+  if(name === 'calculator') return `
+    <div class="app-container">
+      <div class="calc-display" id="calc-display">0</div>
+      <div class="calc-grid">
+        <button class="calc-btn calc-clear" onclick="calcAction('clear')">C</button>
+        <button class="calc-btn calc-op" onclick="calcAction('sign')">+/-</button>
+        <button class="calc-btn calc-op" onclick="calcAction('%')">%</button>
+        <button class="calc-btn calc-op" onclick="calcAction('/')">÷</button>
+        <button class="calc-btn calc-num" onclick="calcAction('7')">7</button>
+        <button class="calc-btn calc-num" onclick="calcAction('8')">8</button>
+        <button class="calc-btn calc-num" onclick="calcAction('9')">9</button>
+        <button class="calc-btn calc-op" onclick="calcAction('*')">×</button>
+        <button class="calc-btn calc-num" onclick="calcAction('4')">4</button>
+        <button class="calc-btn calc-num" onclick="calcAction('5')">5</button>
+        <button class="calc-btn calc-num" onclick="calcAction('6')">6</button>
+        <button class="calc-btn calc-op" onclick="calcAction('-')">−</button>
+        <button class="calc-btn calc-num" onclick="calcAction('1')">1</button>
+        <button class="calc-btn calc-num" onclick="calcAction('2')">2</button>
+        <button class="calc-btn calc-num" onclick="calcAction('3')">3</button>
+        <button class="calc-btn calc-op" onclick="calcAction('+')">+</button>
+        <button class="calc-btn calc-num" style="grid-column:span 2" onclick="calcAction('0')">0</button>
+        <button class="calc-btn calc-num" onclick="calcAction('.')">.</button>
+        <button class="calc-btn calc-eq" onclick="calcAction('=')">=</button>
+      </div>
+    </div>`;
+
+  if(name === 'todo') return `
+    <div class="app-container">
+      <div class="todo-input-row">
+        <input class="todo-input" id="todo-input" placeholder="Kya karna hai?" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="btn btn-primary" onclick="addTodo()">Add</button>
+      </div>
+      <ul class="todo-list" id="todo-list"></ul>
+    </div>`;
+
+  if(name === 'timer') return `
+    <div class="app-container" style="text-align:center">
+      <div class="timer-display" id="timer-display">00:00:00</div>
+      <div class="timer-btns">
+        <button class="btn btn-primary" onclick="toggleTimer()" id="timer-btn">▶ Start</button>
+        <button class="btn btn-secondary" onclick="resetTimer()">↺ Reset</button>
+      </div>
+      <div style="margin-top:1.5rem;color:var(--text2);font-size:0.85rem;">Lap times will appear here</div>
+    </div>`;
+
+  if(name === 'quiz') return `<div class="app-container" id="quiz-container"></div>`;
+
+  if(name === 'colorpicker') return `
+    <div class="app-container">
+      <input type="color" class="color-big" id="color-input" value="#7c3aed" oninput="updateColor(this.value)">
+      <div class="color-codes">
+        <div class="color-code-box"><div class="color-code-label">HEX</div><div class="color-code-val" id="hex-val" onclick="copyVal('hex-val')">#7c3aed</div></div>
+        <div class="color-code-box"><div class="color-code-label">RGB</div><div class="color-code-val" id="rgb-val" onclick="copyVal('rgb-val')">rgb(124,58,237)</div></div>
+        <div class="color-code-box"><div class="color-code-label">HSL</div><div class="color-code-val" id="hsl-val" onclick="copyVal('hsl-val')">hsl(263,84%,58%)</div></div>
+        <div class="color-code-box"><div class="color-code-label">CSS Variable</div><div class="color-code-val" id="css-val" onclick="copyVal('css-val')">--color: #7c3aed</div></div>
+      </div>
+      <div class="color-palettes" id="palettes"></div>
+    </div>`;
+
+  if(name === 'password') return `
+    <div class="app-container">
+      <div class="pass-display" id="pass-display">Click generate...</div>
+      <div class="pass-len">
+        <span>Length:</span>
+        <input type="range" id="pass-len" min="8" max="32" value="16" oninput="document.getElementById('pass-len-val').textContent=this.value;generatePassword()">
+        <span id="pass-len-val">16</span>
+      </div>
+      <div class="pass-options">
+        <label class="pass-opt"><input type="checkbox" id="pass-upper" checked onchange="generatePassword()"> Uppercase (A-Z)</label>
+        <label class="pass-opt"><input type="checkbox" id="pass-lower" checked onchange="generatePassword()"> Lowercase (a-z)</label>
+        <label class="pass-opt"><input type="checkbox" id="pass-num" checked onchange="generatePassword()"> Numbers (0-9)</label>
+        <label class="pass-opt"><input type="checkbox" id="pass-sym" checked onchange="generatePassword()"> Symbols (!@#$)</label>
+      </div>
+      <div style="display:flex;gap:0.5rem">
+        <button class="btn btn-primary" onclick="generatePassword()" style="flex:1">🔄 Generate</button>
+        <button class="btn btn-secondary" onclick="copyPass()">📋 Copy</button>
+      </div>
+    </div>`;
+
+  if(name === 'bmi') return `
+    <div class="app-container">
+      <div class="bmi-inputs">
+        <div class="bmi-field"><label>Weight (kg)</label><input type="number" id="bmi-weight" placeholder="70" oninput="calcBMI()"></div>
+        <div class="bmi-field"><label>Height (cm)</label><input type="number" id="bmi-height" placeholder="170" oninput="calcBMI()"></div>
+      </div>
+      <div class="bmi-result" id="bmi-result">
+        <div style="color:var(--text2);font-size:0.9rem">Weight aur height daalo</div>
+      </div>
+      <div style="margin-top:1rem;font-size:0.8rem;color:var(--text2);line-height:1.8">
+        <div>🔵 Underweight: &lt;18.5 &nbsp;&nbsp; 🟢 Normal: 18.5–24.9</div>
+        <div>🟡 Overweight: 25–29.9 &nbsp;&nbsp; 🔴 Obese: ≥30</div>
+      </div>
+    </div>`;
+
+  if(name === 'coinflip') return `
+    <div class="app-container">
+      <div class="coin-container">
+        <div class="flip-counter">Flips used: <span id="flip-count">0</span> / 10 (free)</div>
+        <div class="coin" onclick="flipCoin()">
+          <div class="coin-inner" id="coin-inner">🪙</div>
+        </div>
+        <div class="coin-result" id="coin-result">Tap to flip!</div>
+        <div class="coin-stats">
+          <div class="coin-stat"><div class="coin-stat-val" id="heads-count">0</div><div class="coin-stat-label">Heads 👑</div></div>
+          <div class="coin-stat"><div class="coin-stat-val" id="tails-count">0</div><div class="coin-stat-label">Tails 🌟</div></div>
+        </div>
+        <button class="btn btn-secondary" style="width:100%;margin-top:0.5rem" onclick="resetCoin()">↺ Reset</button>
+        
+        <!-- AD GATE -->
+        <div class="ad-gate" id="coin-ad-gate">
+          <h3>🎯 10 Free Flips Khatam!</h3>
+          <p>Aur flips ke liye ek short ad dekho 👇</p>
+          <div class="fake-ad">
+            📢 <strong>[Advertisement]</strong><br>
+            Yahan aapka Google AdSense ad aayega.<br>
+            <em style="font-size:0.8rem">728x90 / 300x250 banner</em>
+          </div>
+          <div class="ad-progress"><div class="ad-progress-bar" id="ad-bar"></div></div>
+          <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem" id="ad-countdown">5 seconds mein unlock hoga...</div>
+          <button class="btn btn-primary" id="unlock-btn" style="display:none;width:100%" onclick="unlockFlips()">✅ Ad Dekh Li — 10 Aur Flips Lo!</button>
+        </div>
+      </div>
+    </div>`;
+
+  return '<div>App coming soon!</div>';
+}
+
+// ===== CALCULATOR LOGIC =====
+let calcVal = '0', calcOp = null, calcPrev = null, calcNewNum = true;
+function calcAction(btn) {
+  const disp = document.getElementById('calc-display');
+  if(!disp) return;
+  if(btn === 'clear') { calcVal='0'; calcOp=null; calcPrev=null; calcNewNum=true; }
+  else if(btn === 'sign') { calcVal = (parseFloat(calcVal)*-1).toString(); }
+  else if(btn === '%') { calcVal = (parseFloat(calcVal)/100).toString(); }
+  else if(['+','-','*','/'].includes(btn)) { calcOp=btn; calcPrev=parseFloat(calcVal); calcNewNum=true; }
+  else if(btn === '=') {
+    if(calcOp && calcPrev !== null) {
+      const cur = parseFloat(calcVal);
+      const res = calcOp==='+' ? calcPrev+cur : calcOp==='-' ? calcPrev-cur : calcOp==='*' ? calcPrev*cur : calcPrev/cur;
+      calcVal = res.toString(); calcOp=null; calcPrev=null; calcNewNum=true;
+    }
+  } else if(btn === '.') {
+    if(calcNewNum) { calcVal='0.'; calcNewNum=false; }
+    else if(!calcVal.includes('.')) calcVal += '.';
+  } else {
+    if(calcNewNum || calcVal==='0') { calcVal=btn; calcNewNum=false; }
+    else calcVal += btn;
+  }
+  disp.textContent = calcVal.length > 12 ? parseFloat(calcVal).toExponential(3) : calcVal;
+}
+
+// ===== TODO LOGIC =====
+let todos = [];
+function addTodo() {
+  const inp = document.getElementById('todo-input');
+  if(!inp || !inp.value.trim()) return;
+  todos.push({ id: Date.now(), text: inp.value.trim(), done: false });
+  inp.value = ''; renderTodos();
+}
+function renderTodos() {
+  const list = document.getElementById('todo-list');
+  if(!list) return;
+  list.innerHTML = todos.map(t => `
+    <li class="todo-item ${t.done?'done':''}">
+      <div class="todo-check ${t.done?'checked':''}" onclick="toggleTodo(${t.id})">${t.done?'✓':''}</div>
+      <span>${t.text}</span>
+      <button class="todo-del" onclick="deleteTodo(${t.id})">✕</button>
+    </li>`).join('');
+}
+function toggleTodo(id) { todos = todos.map(t => t.id===id ? {...t,done:!t.done} : t); renderTodos(); }
+function deleteTodo(id) { todos = todos.filter(t => t.id!==id); renderTodos(); }
+
+// ===== TIMER LOGIC =====
+let timerInterval = null, timerSeconds = 0, timerRunning = false;
+function initTimer() { timerSeconds = 0; timerRunning = false; }
+function toggleTimer() {
+  const btn = document.getElementById('timer-btn');
+  if(!btn) return;
+  if(timerRunning) {
+    clearInterval(timerInterval); timerRunning = false; btn.textContent = '▶ Start';
+  } else {
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const h = Math.floor(timerSeconds/3600), m = Math.floor((timerSeconds%3600)/60), s = timerSeconds%60;
+      const d = document.getElementById('timer-display');
+      if(d) d.textContent = [h,m,s].map(x=>x.toString().padStart(2,'0')).join(':');
+    }, 1000);
+    timerRunning = true; btn.textContent = '⏸ Pause';
+  }
+}
+function resetTimer() {
+  clearInterval(timerInterval); timerSeconds=0; timerRunning=false;
+  const d=document.getElementById('timer-display'); if(d) d.textContent='00:00:00';
+  const btn=document.getElementById('timer-btn'); if(btn) btn.textContent='▶ Start';
+}
+
+// ===== QUIZ LOGIC =====
+const QUESTIONS = [
+  { q:'HTML ka full form kya hai?', opts:['Hyper Text Markup Language','High Tech Modern Language','Hyper Transfer Markup Language','None'], ans:0 },
+  { q:'CSS mein color: #ff0000 kaun sa rang hai?', opts:['Blue','Green','Red','Yellow'], ans:2 },
+  { q:'JavaScript mein array ka pehla element kaunse index par hota hai?', opts:['1','0','-1','2'], ans:1 },
+  { q:'Python mein print function kaisa likhte hain?', opts:['Print("Hello")','echo("Hello")','print("Hello")','console.log("Hello")'], ans:2 },
+  { q:'WWW ka full form kya hai?', opts:['World Wide Web','World Web Wide','Wide World Web','Web World Wide'], ans:0 },
+];
+let quizIdx=0, quizScore=0, quizAnswered=false;
+function initQuiz() { quizIdx=0; quizScore=0; renderQuiz(); }
+function renderQuiz() {
+  const c = document.getElementById('quiz-container');
+  if(!c) return;
+  if(quizIdx >= QUESTIONS.length) {
+    c.innerHTML = `<div style="text-align:center;padding:2rem"><div style="font-size:3rem">🏆</div><div class="quiz-score">${quizScore}/${QUESTIONS.length} Correct!</div><button class="btn btn-primary quiz-next" onclick="initQuiz()">🔄 Phir Khelo</button></div>`;
+    return;
+  }
+  const q = QUESTIONS[quizIdx];
+  c.innerHTML = `
+    <div style="color:var(--text2);font-size:0.8rem;margin-bottom:0.5rem">Question ${quizIdx+1} of ${QUESTIONS.length}</div>
+    <div class="quiz-q">${q.q}</div>
+    <div class="quiz-options">${q.opts.map((o,i)=>`<button class="quiz-opt" id="qopt-${i}" onclick="answerQuiz(${i})">${o}</button>`).join('')}</div>
+    <div id="quiz-feedback" style="margin-top:1rem;min-height:2rem"></div>`;
+  quizAnswered = false;
+}
+function answerQuiz(i) {
+  if(quizAnswered) return;
+  quizAnswered = true;
+  const q = QUESTIONS[quizIdx];
+  const fb = document.getElementById('quiz-feedback');
+  document.getElementById('qopt-'+q.ans).classList.add('correct');
+  if(i === q.ans) { quizScore++; fb.innerHTML = '<span style="color:var(--accent2)">✅ Bilkul sahi!</span>'; }
+  else { document.getElementById('qopt-'+i).classList.add('wrong'); fb.innerHTML = '<span style="color:var(--accent3)">❌ Galat! Sahi jawab highlight hua hai.</span>'; }
+  fb.innerHTML += '<br><button class="btn btn-secondary" style="margin-top:0.5rem;font-size:0.85rem" onclick="quizIdx++;renderQuiz()">Agla Sawaal →</button>';
+}
+
+// ===== COLOR PICKER =====
+function initColorPicker() { updateColor('#7c3aed'); }
+function updateColor(hex) {
+  document.getElementById('hex-val').textContent = hex;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  document.getElementById('rgb-val').textContent = `rgb(${r},${g},${b})`;
+  const [h,s,l] = rgbToHsl(r,g,b);
+  document.getElementById('hsl-val').textContent = `hsl(${h},${s}%,${l}%)`;
+  document.getElementById('css-val').textContent = `--color: ${hex}`;
+  document.getElementById('color-input').value = hex;
+  const palettes = document.getElementById('palettes');
+  if(palettes) {
+    const shades = [0.2,0.4,0.6,0.8,1.0,0.8,0.6,0.4].map((_,i) => {
+      const factor = i < 4 ? (i+1)*0.2 : (8-i)*0.2;
+      return `#${Math.round(r*factor).toString(16).padStart(2,'0')}${Math.round(g*factor).toString(16).padStart(2,'0')}${Math.round(b*factor).toString(16).padStart(2,'0')}`;
+    });
+    palettes.innerHTML = shades.map(s=>`<div class="palette-swatch" style="background:${s}" onclick="updateColor('${s}')" title="${s}"></div>`).join('');
+  }
+}
+function rgbToHsl(r,g,b){r/=255;g/=255;b/=255;const max=Math.max(r,g,b),min=Math.min(r,g,b);let h,s,l=(max+min)/2;if(max===min){h=s=0}else{const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break}h/=6}return[Math.round(h*360),Math.round(s*100),Math.round(l*100)]}
+function copyVal(id) { navigator.clipboard.writeText(document.getElementById(id).textContent); }
+
+// ===== PASSWORD LOGIC =====
+function generatePassword() {
+  const upper='ABCDEFGHIJKLMNOPQRSTUVWXYZ', lower='abcdefghijklmnopqrstuvwxyz', nums='0123456789', syms='!@#$%^&*()_+-=[]{}';
+  let chars='', pass='';
+  if(document.getElementById('pass-upper')?.checked) chars+=upper;
+  if(document.getElementById('pass-lower')?.checked) chars+=lower;
+  if(document.getElementById('pass-num')?.checked) chars+=nums;
+  if(document.getElementById('pass-sym')?.checked) chars+=syms;
+  if(!chars) { document.getElementById('pass-display').textContent = 'Koi option select karo!'; return; }
+  const len = parseInt(document.getElementById('pass-len')?.value || 16);
+  for(let i=0;i<len;i++) pass += chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('pass-display').textContent = pass;
+}
+function copyPass() {
+  const p = document.getElementById('pass-display')?.textContent;
+  if(p) navigator.clipboard.writeText(p).then(()=>alert('Password copied! ✅'));
+}
+
+// ===== BMI LOGIC =====
+function calcBMI() {
+  const w = parseFloat(document.getElementById('bmi-weight')?.value), h = parseFloat(document.getElementById('bmi-height')?.value)/100;
+  const r = document.getElementById('bmi-result');
+  if(!r || !w || !h || h<=0) return;
+  const bmi = (w/(h*h)).toFixed(1);
+  const cat = bmi<18.5 ? ['Underweight','#60a5fa'] : bmi<25 ? ['Normal','var(--accent2)'] : bmi<30 ? ['Overweight','#fbbf24'] : ['Obese','var(--accent3)'];
+  r.innerHTML = `<div class="bmi-number" style="color:${cat[1]}">${bmi}</div><div class="bmi-category">${cat[0]}</div>`;
+}
+
+// ===== COIN FLIP LOGIC =====
+let flipCount=0, headsCount=0, tailsCount=0, adWatched=false;
+function initCoinFlip() { flipCount=0; headsCount=0; tailsCount=0; adWatched=false; }
+function flipCoin() {
+  if(flipCount >= 10 && !adWatched) { showAdGate(); return; }
+  const coin = document.getElementById('coin-inner');
+  const result = document.getElementById('coin-result');
+  if(!coin || !result) return;
+  coin.classList.remove('flipping');
+  void coin.offsetWidth;
+  coin.classList.add('flipping');
+  setTimeout(() => {
+    const isHeads = Math.random() > 0.5;
+    if(isHeads) { coin.textContent='👑'; headsCount++; result.textContent='HEADS! 👑'; result.style.color='#ffd700'; }
+    else { coin.textContent='⭐'; tailsCount++; result.textContent='TAILS! ⭐'; result.style.color='var(--accent2)'; }
+    flipCount++;
+    const fc = document.getElementById('flip-count'); if(fc) fc.textContent = flipCount % 10 || (flipCount > 0 ? 10 : 0);
+    const hc = document.getElementById('heads-count'); if(hc) hc.textContent = headsCount;
+    const tc = document.getElementById('tails-count'); if(tc) tc.textContent = tailsCount;
+    if(flipCount >= 10 && !adWatched) { const fc2=document.getElementById('flip-count'); if(fc2) fc2.textContent='10'; }
+  }, 800);
+}
+function showAdGate() {
+  const gate = document.getElementById('coin-ad-gate');
+  if(!gate) return;
+  gate.classList.add('show');
+  let progress = 0;
+  const bar = document.getElementById('ad-bar');
+  const countdown = document.getElementById('ad-countdown');
+  const unlockBtn = document.getElementById('unlock-btn');
+  const interval = setInterval(() => {
+    progress += 2;
+    if(bar) bar.style.width = progress + '%';
+    const remaining = Math.ceil((100-progress)/20);
+    if(countdown) countdown.textContent = remaining > 0 ? `${remaining} seconds mein unlock hoga...` : 'Ad complete! ✅';
+    if(progress >= 100) {
+      clearInterval(interval);
+      if(unlockBtn) unlockBtn.style.display='block';
+      if(countdown) countdown.style.display='none';
+    }
+  }, 100);
+}
+function unlockFlips() {
+  adWatched = true; flipCount = 0;
+  const gate = document.getElementById('coin-ad-gate'); if(gate) gate.classList.remove('show');
+  const fc = document.getElementById('flip-count'); if(fc) fc.textContent='0';
+  const r = document.getElementById('coin-result'); if(r) r.textContent='10 aur flips mil gaye! 🎉';
+  const coin = document.getElementById('coin-inner'); if(coin) coin.textContent='🪙';
+  adWatched = false; // reset for next cycle
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderPrompts();
+  // Close modal on overlay click
+  document.getElementById('app-modal').addEventListener('click', function(e) {
+    if(e.target === this) closeModal();
+  });
+});
+</script>
+</body>
+</html>
